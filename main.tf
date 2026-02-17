@@ -1,25 +1,35 @@
-resource "proxmox_vm_qemu" "test_vm" {
-  name        = "tf-test-01"
-  target_node = "pve1"
-  clone       = "ubuntu-cloudinit-template"
+resource "proxmox_virtual_environment_vm" "test_vm" {
+  name      = "tf-test-02"
+  node_name = "pve1"
 
-  cores   = 2
-  memory  = 2048
-  scsihw  = "virtio-scsi-pci"
-  onboot  = true
+  # Clone from your template VM
+  clone {
+    vm_id = 9000
+  }
+
+  cpu {
+    cores = 2
+  }
+
+  memory {
+    dedicated = 2048
+  }
 
   disk {
-    size    = "10G"
-    type    = "scsi"
-    storage = "local-lvm"
+    datastore_id = "local-lvm"
+    interface    = "scsi0"
+    size         = 10
   }
 
-  network {
-    model  = "virtio"
+  network_device {
     bridge = "vmbr0"
+    model  = "virtio"
   }
 
-  ciuser  = "ubuntu"
-  sshkeys = file("~/.ssh/id_ed25519.pub")
+  initialization {
+    user_account {
+      username = "ubuntu"
+      keys     = [file("~/.ssh/id_ed25519.pub")]
+    }
+  }
 }
-
